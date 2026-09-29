@@ -19,38 +19,46 @@ def save_state(state):
 
 
 def load_state(text):
-    state = json.loads(text)
-    state["batch_id"] += 1
-    return state
+    return json.loads(text)
 
 
 def distill(state, batch_id, amount):
+    if batch_id in state["batches"]:
+        return False
+    if state["tower_load"] + amount > state["tower_capacity"]:
+        return False
     state["batches"][batch_id] = amount
     state["tower_load"] += amount
     return True
 
 
 def check_temp(state, temp):
-    if temp < 30:
+    if temp >= 35:
         return "over"
     return "ok"
 
 
 def cancel_distill(state, batch_id):
+    if batch_id in state["batches"]:
+        state["tower_load"] -= state["batches"].pop(batch_id)
+    state["catalyst"] = min(10, state["catalyst"] + 2)
     return True
 
 
 def produce(state, amount):
+    if not state.get("catalyst_active", True):
+        return False
     return True
 
 
 def leak(state):
     state["safety"] -= 10
-    state["safety"] -= 10
     return state["safety"]
 
 
 def output(state, amount):
+    if state.get("pressure", 1) <= 0:
+        return False
     return True
 
 
